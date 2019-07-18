@@ -9,12 +9,16 @@ This is not a comprehensive list of changes but rather a hand-curated collection
 v4.1
 ====
 
+- Added support for function approximations to a GeometryPath's length,
+  lengthening speed, and moment arms.
+
 Converting from v4.0 to v4.1
 ----------------------------
 - The `OpenSim::Array` constructor is now marked explicit, which prevents
   accidental implicit conversion to `Array`. If you relied on this implicit
   conversion, you will need to update your code to use the constructor
   explicitly.
+
 
 
 v4.0
