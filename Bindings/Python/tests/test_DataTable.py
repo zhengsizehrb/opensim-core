@@ -17,9 +17,9 @@ class TestDataTable(unittest.TestCase):
         dt = osim.DataTableUnitVec3()
         c = dt.clone()
         assert c
-        dt = osim.DataTableQuaternion()
-        c = dt.clone()
-        assert c
+        # dt = osim.DataTableQuaternion()
+        # c = dt.clone()
+        # assert c
         dt = osim.DataTableVec6()
         c = dt.clone()
         assert c
@@ -271,18 +271,18 @@ class TestDataTable(unittest.TestCase):
         table.setColumnLabels(('col0.0', 'col0.1', 'col0.2', 'col0.3',
                                'col1.0', 'col1.1', 'col1.2', 'col1.3',
                                'col2.0', 'col2.1', 'col2.2', 'col2.3'))
-        tableQuat = table.packQuaternion()
-        tableQuat.getColumnLabels() == ('col0', 'col1', 'col2')
-        tableQuat.getNumRows()    == 3
-        tableQuat.getNumColumns() == 3
-        print(tableQuat)
-        tableFlat = tableQuat.flatten()
-        assert len(tableFlat.getColumnLabels()) == 12
-        assert tableFlat.getColumnLabel( 0) == 'col0_1'
-        assert tableFlat.getColumnLabel(11) == 'col2_4'
-        assert tableFlat.getNumRows()           == 3
-        assert tableFlat.getNumColumns()        == 12
-        print(tableFlat)
+        # tableQuat = table.packQuaternion()
+        # tableQuat.getColumnLabels() == ('col0', 'col1', 'col2')
+        # tableQuat.getNumRows()    == 3
+        # tableQuat.getNumColumns() == 3
+        # print(tableQuat)
+        # tableFlat = tableQuat.flatten()
+        # assert len(tableFlat.getColumnLabels()) == 12
+        # assert tableFlat.getColumnLabel( 0) == 'col0_1'
+        # assert tableFlat.getColumnLabel(11) == 'col2_4'
+        # assert tableFlat.getNumRows()           == 3
+        # assert tableFlat.getNumColumns()        == 12
+        # print(tableFlat)
         table.setColumnLabels(('col0_0', 'col0_1', 'col0_2',
                                'col0_3', 'col0_4', 'col0_5',
                                'col1_0', 'col1_1', 'col1_2',
@@ -385,11 +385,11 @@ class TestDataTable(unittest.TestCase):
         table.setColumnLabels(('col0.0', 'col0.1', 'col0.2', 'col0.3',
                                'col1.0', 'col1.1', 'col1.2', 'col1.3',
                                'col2.0', 'col2.1', 'col2.2', 'col2.3'))
-        tableQuat = table.packQuaternion()
-        tableQuat.getColumnLabels() == ('col0', 'col1', 'col2')
-        tableQuat.getNumRows()    == 3
-        tableQuat.getNumColumns() == 3
-        print(tableQuat)
+        # tableQuat = table.packQuaternion()
+        # tableQuat.getColumnLabels() == ('col0', 'col1', 'col2')
+        # tableQuat.getNumRows()    == 3
+        # tableQuat.getNumColumns() == 3
+        # print(tableQuat)
         table.setColumnLabels(('col0_0', 'col0_1', 'col0_2',
                                'col0_3', 'col0_4', 'col0_5',
                                'col1_0', 'col1_1', 'col1_2',
