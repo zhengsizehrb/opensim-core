@@ -371,6 +371,7 @@ MocoSolution MocoCasADiSolver::solveImpl() const {
     }
     OpenSim::Logger::setLevel(origLoggerLevel);
 
+
     MocoSolution mocoSolution =
             convertToMocoTrajectory<MocoSolution>(casSolution);
 

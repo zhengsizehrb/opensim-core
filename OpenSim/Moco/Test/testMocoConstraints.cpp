@@ -1461,139 +1461,139 @@ TEST_CASE("Prescribed kinematics with kinematic constraints", "[casadi]") {
 
     OpenSim_CHECK_MATRIX_TOL(lambda, 0.5 * (Fx - Fy), 1e-5);
 }
-
-TEMPLATE_TEST_CASE("MocoControlBoundConstraint", "",
-        MocoCasADiSolver, MocoTropterSolver) {
-    SECTION("Lower bound only") {
-        MocoStudy study;
-        auto& problem = study.updProblem();
-        problem.setModelAsCopy(ModelFactory::createPendulum());
-        problem.setTimeBounds(0, 1);
-        problem.setStateInfo("/jointset/j0/q0/value", {-10, 10}, 0);
-        problem.setStateInfo("/jointset/j0/q0/speed", {-10, 10}, 0);
-        problem.setControlInfo("/tau0", {-5, 5});
-        problem.addGoal<MocoControlGoal>();
-        auto* constr = problem.addPathConstraint<MocoControlBoundConstraint>();
-        const double lowerBound = 0.1318;
-        constr->addControlPath("/tau0");
-        constr->setLowerBound(Constant(lowerBound));
-
-        study.initSolver<TestType>();
-        MocoSolution solution = study.solve();
-        SimTK::Vector expected(solution.getNumTimes());
-        expected = lowerBound;
-        OpenSim_CHECK_MATRIX_ABSTOL(
-                solution.getControlsTrajectory(), expected, 1e-6);
-    }
-
-    SECTION("Upper bound only") {
-        MocoStudy study;
-        auto& problem = study.updProblem();
-        problem.setModelAsCopy(ModelFactory::createPendulum());
-        problem.setTimeBounds(0, {0.1, 10});
-        problem.setStateInfo("/jointset/j0/q0/value", {0, 1}, 0, 0.53);
-        problem.setStateInfo("/jointset/j0/q0/speed", {-10, 10}, 0, 0);
-        problem.setControlInfo("/tau0", {-20, 20});
-        problem.addGoal<MocoFinalTimeGoal>();
-        auto* constr = problem.addPathConstraint<MocoControlBoundConstraint>();
-        constr->addControlPath("/tau0");
-        const double upperBound = 11.236;
-        constr->setUpperBound(Constant(upperBound));
-
-        study.initSolver<TestType>();
-        MocoSolution solution = study.solve();
-        SimTK::Vector expected(solution.getNumTimes());
-        expected = upperBound;
-        CHECK(SimTK::max(solution.getControlsTrajectory())[0] ==
-                Approx(upperBound).margin(1e-6));
-        CHECK(SimTK::min(solution.getControlsTrajectory())[0] ==
-                Approx(-20).margin(1e-6));
-    }
-
-    SECTION("Upper and lower bounds are the same") {
-        MocoStudy study;
-        auto& problem = study.updProblem();
-        problem.setModelAsCopy(ModelFactory::createPendulum());
-        problem.setTimeBounds(0, 1);
-        problem.setStateInfo("/jointset/j0/q0/value", {-10, 10}, 0);
-        problem.setStateInfo("/jointset/j0/q0/speed", {-10, 10}, 0);
-        problem.setControlInfo("/tau0", {-5, 5});
-        problem.addGoal<MocoControlGoal>();
-        PiecewiseLinearFunction violateLower;
-        violateLower.addPoint(0, 0);
-        violateLower.addPoint(0.2, 0.5316);
-        violateLower.addPoint(0.7, -0.3137);
-        violateLower.addPoint(1, .0319);
-        auto* constr = problem.addPathConstraint<MocoControlBoundConstraint>();
-        constr->addControlPath("/tau0");
-        constr->setLowerBound(violateLower);
-        constr->setEqualityWithLower(true);
-        study.initSolver<TestType>();
-        MocoSolution solution = study.solve();
-        SimTK::Vector expectedV(solution.getNumTimes());
-        for (int itime = 0; itime < expectedV.size(); ++itime) {
-            SimTK::Vector arg(1);
-            arg[0] = solution.getTime()[itime];
-            expectedV[itime] = violateLower.calcValue(arg);
-        }
-        MocoTrajectory expected = solution;
-        expected.setControl("/tau0", expectedV);
-
-        CHECK(solution.compareContinuousVariablesRMS(
-                      expected, {{"controls", {}}}) < 1e-3);
-    }
-
-    SECTION("Time range of bounds function is too small.") {
-        MocoStudy study;
-        auto& problem = study.updProblem();
-        problem.setModelAsCopy(ModelFactory::createPendulum());
-        problem.setTimeBounds({-31, 0}, {1, 50});
-        problem.addGoal<MocoControlGoal>();
-        GCVSpline violateLower;
-        violateLower.setDegree(5);
-        violateLower.addPoint(-30.9999, 0);
-        violateLower.addPoint(0, 0);
-        violateLower.addPoint(0.5, 0);
-        violateLower.addPoint(0.7, 0);
-        violateLower.addPoint(0.8, 0);
-        violateLower.addPoint(0.9, 0);
-        violateLower.addPoint(50, 0.319);
-        auto* constr = problem.addPathConstraint<MocoControlBoundConstraint>();
-        constr->addControlPath("/tau0");
-        constr->setLowerBound(violateLower);
-        CHECK_THROWS_WITH(study.solve(),
-                Contains("must be less than or equal to the minimum"));
-        constr->clearLowerBound();
-        GCVSpline violateUpper;
-        violateUpper.setDegree(5);
-        violateUpper.addPoint(-31, 0);
-        violateUpper.addPoint(0, 0);
-        violateUpper.addPoint(0.5, 0);
-        violateUpper.addPoint(0.7, 0);
-        violateUpper.addPoint(0.8, 0);
-        violateUpper.addPoint(0.9, 0);
-        violateUpper.addPoint(49.99999, .0319);
-        constr->setUpperBound(violateUpper);
-        CHECK_THROWS_WITH(study.solve(),
-                Contains("must be greater than or equal to the maximum"));
-    }
-
-    SECTION("Can omit both bounds.") {
-        MocoStudy study;
-        auto& problem = study.updProblem();
-        problem.setModelAsCopy(ModelFactory::createPendulum());
-        problem.setTimeBounds(0, 1);
-        problem.setStateInfo("/jointset/j0/q0/value", {-10, 10}, 0);
-        problem.setStateInfo("/jointset/j0/q0/speed", {-10, 10}, 0);
-        problem.setControlInfo("/tau0", {-5, 5});
-        problem.addGoal<MocoControlGoal>();
-        auto* constr = problem.addPathConstraint<MocoControlBoundConstraint>();
-        study.initSolver<TestType>();
-        study.solve();
-        constr->addControlPath("/tau0");
-        study.solve();
-    }
-}
+//
+//TEMPLATE_TEST_CASE("MocoControlBoundConstraint", "",
+//        MocoCasADiSolver, MocoTropterSolver) {
+//    SECTION("Lower bound only") {
+//        MocoStudy study;
+//        auto& problem = study.updProblem();
+//        problem.setModelAsCopy(ModelFactory::createPendulum());
+//        problem.setTimeBounds(0, 1);
+//        problem.setStateInfo("/jointset/j0/q0/value", {-10, 10}, 0);
+//        problem.setStateInfo("/jointset/j0/q0/speed", {-10, 10}, 0);
+//        problem.setControlInfo("/tau0", {-5, 5});
+//        problem.addGoal<MocoControlGoal>();
+//        auto* constr = problem.addPathConstraint<MocoControlBoundConstraint>();
+//        const double lowerBound = 0.1318;
+//        constr->addControlPath("/tau0");
+//        constr->setLowerBound(Constant(lowerBound));
+//
+//        study.initSolver<TestType>();
+//        MocoSolution solution = study.solve();
+//        SimTK::Vector expected(solution.getNumTimes());
+//        expected = lowerBound;
+//        OpenSim_CHECK_MATRIX_ABSTOL(
+//                solution.getControlsTrajectory(), expected, 1e-6);
+//    }
+//
+//    SECTION("Upper bound only") {
+//        MocoStudy study;
+//        auto& problem = study.updProblem();
+//        problem.setModelAsCopy(ModelFactory::createPendulum());
+//        problem.setTimeBounds(0, {0.1, 10});
+//        problem.setStateInfo("/jointset/j0/q0/value", {0, 1}, 0, 0.53);
+//        problem.setStateInfo("/jointset/j0/q0/speed", {-10, 10}, 0, 0);
+//        problem.setControlInfo("/tau0", {-20, 20});
+//        problem.addGoal<MocoFinalTimeGoal>();
+//        auto* constr = problem.addPathConstraint<MocoControlBoundConstraint>();
+//        constr->addControlPath("/tau0");
+//        const double upperBound = 11.236;
+//        constr->setUpperBound(Constant(upperBound));
+//
+//        study.initSolver<TestType>();
+//        MocoSolution solution = study.solve();
+//        SimTK::Vector expected(solution.getNumTimes());
+//        expected = upperBound;
+//        CHECK(SimTK::max(solution.getControlsTrajectory())[0] ==
+//                Approx(upperBound).margin(1e-6));
+//        CHECK(SimTK::min(solution.getControlsTrajectory())[0] ==
+//                Approx(-20).margin(1e-6));
+//    }
+//
+//    SECTION("Upper and lower bounds are the same") {
+//        MocoStudy study;
+//        auto& problem = study.updProblem();
+//        problem.setModelAsCopy(ModelFactory::createPendulum());
+//        problem.setTimeBounds(0, 1);
+//        problem.setStateInfo("/jointset/j0/q0/value", {-10, 10}, 0);
+//        problem.setStateInfo("/jointset/j0/q0/speed", {-10, 10}, 0);
+//        problem.setControlInfo("/tau0", {-5, 5});
+//        problem.addGoal<MocoControlGoal>();
+//        PiecewiseLinearFunction violateLower;
+//        violateLower.addPoint(0, 0);
+//        violateLower.addPoint(0.2, 0.5316);
+//        violateLower.addPoint(0.7, -0.3137);
+//        violateLower.addPoint(1, .0319);
+//        auto* constr = problem.addPathConstraint<MocoControlBoundConstraint>();
+//        constr->addControlPath("/tau0");
+//        constr->setLowerBound(violateLower);
+//        constr->setEqualityWithLower(true);
+//        study.initSolver<TestType>();
+//        MocoSolution solution = study.solve();
+//        SimTK::Vector expectedV(solution.getNumTimes());
+//        for (int itime = 0; itime < expectedV.size(); ++itime) {
+//            SimTK::Vector arg(1);
+//            arg[0] = solution.getTime()[itime];
+//            expectedV[itime] = violateLower.calcValue(arg);
+//        }
+//        MocoTrajectory expected = solution;
+//        expected.setControl("/tau0", expectedV);
+//
+//        CHECK(solution.compareContinuousVariablesRMS(
+//                      expected, {{"controls", {}}}) < 1e-3);
+//    }
+//
+//    SECTION("Time range of bounds function is too small.") {
+//        MocoStudy study;
+//        auto& problem = study.updProblem();
+//        problem.setModelAsCopy(ModelFactory::createPendulum());
+//        problem.setTimeBounds({-31, 0}, {1, 50});
+//        problem.addGoal<MocoControlGoal>();
+//        GCVSpline violateLower;
+//        violateLower.setDegree(5);
+//        violateLower.addPoint(-30.9999, 0);
+//        violateLower.addPoint(0, 0);
+//        violateLower.addPoint(0.5, 0);
+//        violateLower.addPoint(0.7, 0);
+//        violateLower.addPoint(0.8, 0);
+//        violateLower.addPoint(0.9, 0);
+//        violateLower.addPoint(50, 0.319);
+//        auto* constr = problem.addPathConstraint<MocoControlBoundConstraint>();
+//        constr->addControlPath("/tau0");
+//        constr->setLowerBound(violateLower);
+//        CHECK_THROWS_WITH(study.solve(),
+//                Contains("must be less than or equal to the minimum"));
+//        constr->clearLowerBound();
+//        GCVSpline violateUpper;
+//        violateUpper.setDegree(5);
+//        violateUpper.addPoint(-31, 0);
+//        violateUpper.addPoint(0, 0);
+//        violateUpper.addPoint(0.5, 0);
+//        violateUpper.addPoint(0.7, 0);
+//        violateUpper.addPoint(0.8, 0);
+//        violateUpper.addPoint(0.9, 0);
+//        violateUpper.addPoint(49.99999, .0319);
+//        constr->setUpperBound(violateUpper);
+//        CHECK_THROWS_WITH(study.solve(),
+//                Contains("must be greater than or equal to the maximum"));
+//    }
+//
+//    SECTION("Can omit both bounds.") {
+//        MocoStudy study;
+//        auto& problem = study.updProblem();
+//        problem.setModelAsCopy(ModelFactory::createPendulum());
+//        problem.setTimeBounds(0, 1);
+//        problem.setStateInfo("/jointset/j0/q0/value", {-10, 10}, 0);
+//        problem.setStateInfo("/jointset/j0/q0/speed", {-10, 10}, 0);
+//        problem.setControlInfo("/tau0", {-5, 5});
+//        problem.addGoal<MocoControlGoal>();
+//        auto* constr = problem.addPathConstraint<MocoControlBoundConstraint>();
+//        study.initSolver<TestType>();
+//        study.solve();
+//        constr->addControlPath("/tau0");
+//        study.solve();
+//    }
+//}
 
 TEMPLATE_TEST_CASE("MocoFrameDistanceConstraint", "",
         MocoCasADiSolver, MocoTropterSolver) {
@@ -1666,32 +1666,32 @@ TEMPLATE_TEST_CASE("MocoFrameDistanceConstraint", "",
         CHECK(Approx(position.norm()).margin(1e-2) >= distance);
     }
 }
-
-TEMPLATE_TEST_CASE("Multiple MocoPathConstraints", "", MocoCasADiSolver,
-        MocoTropterSolver) {
-    MocoStudy study;
-    auto& problem = study.updProblem();
-    problem.setModelAsCopy(ModelFactory::createDoublePendulum());
-    problem.setTimeBounds(0, 1);
-    problem.setStateInfo("/jointset/j0/q0/value", {-10, 10}, 0);
-    problem.setStateInfo("/jointset/j0/q0/speed", {-10, 10}, 0);
-    problem.setStateInfo("/jointset/j1/q1/value", {-10, 10}, 0);
-    problem.setStateInfo("/jointset/j1/q1/speed", {-10, 10}, 0);
-    problem.setControlInfo("/tau0", {-5, 5});
-    problem.setControlInfo("/tau0", {-5, 5});
-    problem.addGoal<MocoControlGoal>();
-    auto* controlConstraint = problem
-            .addPathConstraint<MocoControlBoundConstraint>();
-    controlConstraint->setName("control_constraint");
-    controlConstraint->addControlPath("/tau0");
-    controlConstraint->setUpperBound(Constant(1.0));
-    auto* distanceConstraint =
-            problem.addPathConstraint<MocoFrameDistanceConstraint>();
-    distanceConstraint->setName("distance_constraint");
-    distanceConstraint->addFramePair({"/ground", "/bodyset/b0", 1.0,
-                                      SimTK::Infinity});
-    distanceConstraint->addFramePair({"/ground", "/bodyset/b1", 1.0,
-                                      SimTK::Infinity});
-    study.initSolver<TestType>();
-    study.solve();
-}
+//
+//TEMPLATE_TEST_CASE("Multiple MocoPathConstraints", "", MocoCasADiSolver,
+//        MocoTropterSolver) {
+//    MocoStudy study;
+//    auto& problem = study.updProblem();
+//    problem.setModelAsCopy(ModelFactory::createDoublePendulum());
+//    problem.setTimeBounds(0, 1);
+//    problem.setStateInfo("/jointset/j0/q0/value", {-10, 10}, 0);
+//    problem.setStateInfo("/jointset/j0/q0/speed", {-10, 10}, 0);
+//    problem.setStateInfo("/jointset/j1/q1/value", {-10, 10}, 0);
+//    problem.setStateInfo("/jointset/j1/q1/speed", {-10, 10}, 0);
+//    problem.setControlInfo("/tau0", {-5, 5});
+//    problem.setControlInfo("/tau0", {-5, 5});
+//    problem.addGoal<MocoControlGoal>();
+//    auto* controlConstraint = problem
+//            .addPathConstraint<MocoControlBoundConstraint>();
+//    controlConstraint->setName("control_constraint");
+//    controlConstraint->addControlPath("/tau0");
+//    controlConstraint->setUpperBound(Constant(1.0));
+//    auto* distanceConstraint =
+//            problem.addPathConstraint<MocoFrameDistanceConstraint>();
+//    distanceConstraint->setName("distance_constraint");
+//    distanceConstraint->addFramePair({"/ground", "/bodyset/b0", 1.0,
+//                                      SimTK::Infinity});
+//    distanceConstraint->addFramePair({"/ground", "/bodyset/b1", 1.0,
+//                                      SimTK::Infinity});
+//    study.initSolver<TestType>();
+//    study.solve();
+//}

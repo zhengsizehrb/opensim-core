@@ -25,6 +25,7 @@
 #include <OpenSim/Common/FileAdapter.h>
 #include <OpenSim/Common/Function.h>
 #include <OpenSim/Common/FunctionSet.h>
+#include <OpenSim/Common/Gaussian.h>
 #include <OpenSim/Common/GCVSpline.h>
 #include <OpenSim/Common/GCVSplineSet.h>
 #include <OpenSim/Common/IMUDataReader.h>

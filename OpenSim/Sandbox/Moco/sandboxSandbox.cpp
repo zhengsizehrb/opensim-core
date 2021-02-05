@@ -19,19 +19,24 @@
 // This file provides a way to easily prototype or test temporary snippets of
 // code during development.
 
-#include <Moco/osimMoco.h>
+#include <OpenSim/Moco/osimMoco.h>
+#include "OpenSim/Actuators/ModelOperators.h"
 
 using namespace OpenSim;
 
 int main() {
     // TODO Logger::setLevel(Logger::Level::Debug);
-    MocoTrack track;
-    ModelProcessor modelProcessor("DeMers_mod_noarms_welds_4.0.osim");
-    modelProcessor.append(ModOpReplaceMusclesWithDeGrooteFregly2016());
-    modelProcessor.append(ModOpIgnoreTendonCompliance());
-    track.setModel(modelProcessor);
-    track.setStatesReference({"r_SLD_mean_coords.sto"});
-    track.set_allow_unused_references(true);
-    MocoSolution solution = track.solve();
+    //MocoTrack track;
+    //ModelProcessor modelProcessor("DeMers_mod_noarms_welds_4.0.osim");
+    //modelProcessor.append(ModOpReplaceMusclesWithDeGrooteFregly2016());
+    //modelProcessor.append(ModOpIgnoreTendonCompliance());
+    //track.setModel(modelProcessor);
+    //track.setStatesReference({"r_SLD_mean_coords.sto"});
+    //track.set_allow_unused_references(true);
+    //MocoSolution solution = track.solve();
+
+    MocoStudy study("perturb_study.xml");
+    MocoSolution solution = study.solve();
+
     return EXIT_SUCCESS;
 }
