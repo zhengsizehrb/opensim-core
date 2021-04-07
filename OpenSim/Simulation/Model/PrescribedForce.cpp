@@ -423,7 +423,49 @@ OpenSim::Array<double> PrescribedForce::getRecordValues(const SimTK::State& stat
         //applyTorque(*_body, torque);
     }
     return values;
-};
+}
+
+void PrescribedForce::generateDecorations(bool fixed,
+        const ModelDisplayHints& hints, const SimTK::State& state,
+        SimTK::Array_<SimTK::DecorativeGeometry>& geometry) const {
+    Super::generateDecorations(fixed, hints, state, geometry);
+
+    if (state.getSystemStage() >= SimTK::Stage::Dynamics) {
+        // Get the underlying SimTK force element.
+
+        const Model& model = getModel();
+        const double mass = model.getTotalMass(state);
+        const double weight = mass * model.getGravity().norm();
+        const double forceVizScaleFactor = 1 / weight;
+
+        const PhysicalFrame& frame =
+                getSocket<PhysicalFrame>("frame").getConnectee();
+        const Ground& ground = model.getGround();
+
+        SimTK::Vec3 force = getForceApplied(state);
+        SimTK::Vec3 point = getApplicationPoint(state);
+        if (!get_forceIsGlobal())
+            force = frame.expressVectorInAnotherFrame(state, force, ground);
+        if (get_pointIsGlobal())
+            point = ground.findStationLocationInAnotherFrame(state, point, frame);
+
+        // Scale the contact force vector and compute the cylinder length.
+        const auto& scaledForce = forceVizScaleFactor * force;
+        const SimTK::Real length(scaledForce.norm());
+
+        //const SimTK::Transform forceVizTransform;
+        const SimTK::Transform forceVizTransform(
+                SimTK::Rotation(SimTK::UnitVec3(scaledForce), SimTK::YAxis),
+                point + scaledForce / 2.0);
+
+        // Construct the force decoration and add it to the list of geometries.
+        //SimTK::DecorativeArrow forceViz(SimTK::Vec3(0), SimTK::Vec3(1), length);
+        SimTK::DecorativeCylinder forceViz(0.05, 0.5 * length);
+        forceViz.setTransform(forceVizTransform);
+        forceViz.setColor(SimTK::Vec3(0.0, 0.6, 0.0));
+        geometry.push_back(forceViz);
+    }
+}
 
 void PrescribedForce::setNull()
 {

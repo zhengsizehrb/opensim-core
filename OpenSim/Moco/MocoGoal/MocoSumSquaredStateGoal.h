@@ -85,6 +85,13 @@ public:
     void clearPattern() { updProperty_pattern().clear(); }
     std::string getPattern() const { return get_pattern(); }
 
+    /** Set if the goal should be divided by the displacement of the system's
+    center of mass over the phase. */
+    void setDivideByDisplacement(bool tf) { set_divide_by_displacement(tf); }
+    bool getDivideByDisplacement() const {
+        return get_divide_by_displacement();
+    }
+
 protected:
     void initializeOnModelImpl(const Model&) const override;
     void calcIntegrandImpl(
@@ -92,6 +99,10 @@ protected:
     void calcGoalImpl(
             const GoalInput& input, SimTK::Vector& cost) const override {
         cost[0] = input.integral;
+        if (get_divide_by_displacement()) {
+            cost[0] /= calcSystemDisplacement(
+                    input.initial_state, input.final_state);
+        }
     }
     void printDescriptionImpl() const override;
 
@@ -99,15 +110,18 @@ private:
     OpenSim_DECLARE_PROPERTY(state_weights, MocoWeightSet,
             "Set of weight objects to weight the individual "
             "state variables in the cost.");
-
     OpenSim_DECLARE_OPTIONAL_PROPERTY(pattern, std::string,
             "If provided, only states matching this regular expression are "
             "included (default: no pattern). If no pattern is provided, then "
             "all states are used.");
+    OpenSim_DECLARE_PROPERTY(divide_by_displacement, bool,
+            "Divide by the model's displacement over the phase (default: "
+            "false)");
 
     void constructProperties() {
         constructProperty_state_weights(MocoWeightSet());
         constructProperty_pattern();
+        constructProperty_divide_by_displacement(false);
     }
 
     /// Return the corresponding weight to a given stateName in the

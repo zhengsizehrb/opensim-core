@@ -50,6 +50,8 @@ set(MOCO_SOURCES
         MocoGoal/MocoAngularVelocityTrackingGoal.cpp
         MocoGoal/MocoAccelerationTrackingGoal.h
         MocoGoal/MocoAccelerationTrackingGoal.cpp
+        MocoGoal/MocoOutputTrackingGoal.h
+        MocoGoal/MocoOutputTrackingGoal.cpp
         MocoGoal/MocoInitialActivationGoal.cpp
         MocoGoal/MocoInitialActivationGoal.h
         MocoGoal/MocoInitialVelocityEquilibriumDGFGoal.h

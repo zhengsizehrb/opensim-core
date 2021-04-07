@@ -222,7 +222,7 @@ TimeSeriesTable_<T> analyze(Model model, const TimeSeriesTable& statesTable,
     // Create the reporter object to which we'll add the output data to create
     // the report.
     auto* reporter = new TableReporter_<T>();
-    // Loop through all the outputs for all components in the model, and if
+    // Loop through all the outputs for all subcomponents in the model, and if
     // the output path matches one provided in the argument and the output type
     // agrees with the template argument type, add it to the report.
     for (const auto& comp : model.getComponentList()) {
@@ -241,6 +241,24 @@ TimeSeriesTable_<T> analyze(Model model, const TimeSeriesTable& statesTable,
                         log_warn("Ignoring output {} of type {}.",
                                 output.getPathName(), output.getTypeName());
                     }
+                }
+            }
+        }
+    }
+    // Check if any output paths match the outputs of the top-level model.
+    for (const auto& outputName : model.getOutputNames()) {
+        const auto& output = model.getOutput(outputName);
+        auto thisOutputPath = output.getPathName();
+        for (const auto& outputPathArg : outputPaths) {
+            if (std::regex_match(thisOutputPath, std::regex(outputPathArg))) {
+                // Make sure the output type agrees with the template.
+                if (dynamic_cast<const Output<T>*>(&output)) {
+                    log_debug("Adding output {} of type {}.",
+                            output.getPathName(), output.getTypeName());
+                    reporter->addToReport(output);
+                } else {
+                    log_warn("Ignoring output {} of type {}.",
+                            output.getPathName(), output.getTypeName());
                 }
             }
         }

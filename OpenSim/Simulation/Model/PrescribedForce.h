@@ -272,6 +272,11 @@ protected:
         SimTK::Vector_<SimTK::SpatialVec>& bodyForces, 
         SimTK::Vector&                     generalizedForces) const override;
 
+    /** Visualize applied force. **/
+    void generateDecorations(bool fixed, const ModelDisplayHints& hints,
+            const SimTK::State& state,
+            SimTK::Array_<SimTK::DecorativeGeometry>& geometry) const override;
+
 //==============================================================================
 // DATA
 //==============================================================================
