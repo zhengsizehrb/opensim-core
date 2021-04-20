@@ -73,6 +73,13 @@ public:
         set_states_reference(std::move(ref));
     }
 
+    void setMinimizeEndpointDeviation(bool tf) {
+        set_minimize_endpoint_deviation(tf);
+    }
+    bool getMinimizeEndpointDeviation() const {
+        return get_minimize_endpoint_deviation();
+    }
+
 protected:
     void initializeOnModelImpl(const Model&) const override;
     void calcIntegrandImpl(
@@ -88,6 +95,7 @@ private:
             "variables from which tracked rotation data is computed. Column "
             "labels should be model state paths, "
             "e.g., '/jointset/ankle_angle_r/value'");
+    OpenSim_DECLARE_PROPERTY(minimize_endpoint_deviation, bool, "TODO");
     void constructProperties();
 
     mutable GCVSplineSet m_refs_double;

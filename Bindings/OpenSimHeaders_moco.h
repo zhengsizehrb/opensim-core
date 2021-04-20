@@ -22,12 +22,14 @@
 #include <OpenSim/Moco/MocoGoal/MocoMarkerFinalGoal.h>
 #include <OpenSim/Moco/MocoGoal/MocoMarkerTrackingGoal.h>
 #include <OpenSim/Moco/MocoGoal/MocoOrientationTrackingGoal.h>
+#include <OpenSim/Moco/MocoGoal/MocoAngularVelocityTrackingGoal.h>
 #include <OpenSim/Moco/MocoGoal/MocoOutputGoal.h>
 #include <OpenSim/Moco/MocoGoal/MocoOutputTrackingGoal.h>
 #include <OpenSim/Moco/MocoGoal/MocoPeriodicityGoal.h>
 #include <OpenSim/Moco/MocoGoal/MocoStateTrackingGoal.h>
 #include <OpenSim/Moco/MocoGoal/MocoSumSquaredStateGoal.h>
 #include <OpenSim/Moco/MocoGoal/MocoTranslationTrackingGoal.h>
+#include <OpenSim/Moco/MocoGoal/MocoBaseOfSupportGoal.h>
 #include <OpenSim/Moco/MocoInverse.h>
 #include <OpenSim/Moco/MocoParameter.h>
 #include <OpenSim/Moco/MocoProblem.h>

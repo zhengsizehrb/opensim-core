@@ -17,6 +17,7 @@
  * -------------------------------------------------------------------------- */
 
 #include "MocoOutputTrackingGoal.h"
+#include "OpenSim/Common/STOFileAdapter.h"
 
 using namespace OpenSim;
 
@@ -46,6 +47,7 @@ void MocoOutputTrackingGoalGroup::constructProperties() {
 void MocoOutputTrackingGoal::constructProperties() {
     constructProperty_output_groups();
     constructProperty_states_reference(TableProcessor());
+    constructProperty_minimize_endpoint_deviation(false);
 }
 
 void MocoOutputTrackingGoal::initializeOnModelImpl(
@@ -100,12 +102,13 @@ void MocoOutputTrackingGoal::initializeOnModelImpl(
 
     TimeSeriesTable doubleTable;
     TimeSeriesTableVec3 vec3Table;
-    std::vector<double> doubles;
-    std::vector<SimTK::Vec3> vec3s;
-    for (auto state : statesTraj) {
+    
+    for (const auto& state : statesTraj) {
         // This realization ignores any SimTK::Motions prescribed in the
         // model.
         model.realizeAcceleration(state);
+        std::vector<double> doubles;
+        std::vector<SimTK::Vec3> vec3s;
         for (int ig = 0; ig < numGroups; ++ig) {
             const auto& group = get_output_groups(ig);
             if (m_data_types[ig] == Type_double) {
@@ -127,7 +130,8 @@ void MocoOutputTrackingGoal::initializeOnModelImpl(
     m_refs_double = GCVSplineSet(doubleTable);
     m_refs_Vec3 = GCVSplineSet(vec3Table.flatten());
 
-    setRequirements(1, 1, SimTK::Stage::Acceleration);
+    const int numEndpoints = get_minimize_endpoint_deviation() ? numGroups : 0;
+    setRequirements(1, 1 + numEndpoints, SimTK::Stage::Acceleration);
 }
 
 void MocoOutputTrackingGoal::calcIntegrandImpl(
@@ -152,11 +156,39 @@ void MocoOutputTrackingGoal::calcIntegrandImpl(
             ivec3 += 3;
         }
         double error = model_val - ref_val;
-        integrand = m_weights[i] * error * error;
+        integrand += m_weights[i] * error * error;
     }
 }
 
 void MocoOutputTrackingGoal::calcGoalImpl(
         const GoalInput& input, SimTK::Vector& cost) const {
     cost[0] = input.integral;
+
+    if (get_minimize_endpoint_deviation()) {
+        getModel().realizeAcceleration(input.final_state);
+        SimTK::Vector timeVec(1, input.final_state.getTime());
+
+        double model_val = 0;
+        double ref_val = 0;
+        int idouble = 0;
+        int ivec3 = 0;
+        for (int i = 0; i < (int)m_outputs.size(); ++i) {
+            if (m_data_types[i] == Type_double) {
+                model_val =
+                        static_cast<const Output<double>*>(m_outputs[i].get())
+                                ->getValue(input.final_state);
+                ref_val = m_refs_double[idouble].calcValue(timeVec);
+                ++idouble;
+            } else if (m_data_types[i] == Type_Vec3) {
+                model_val = static_cast<const Output<SimTK::Vec3>*>(
+                        m_outputs[i].get())
+                                    ->getValue(input.final_state)[m_indices[i]];
+                ref_val = m_refs_Vec3[ivec3 + m_indices[i]].calcValue(timeVec);
+                ivec3 += 3;
+            }
+            double error = model_val - ref_val;
+            cost[i + 1] = m_weights[i] * error * error;
+        }
+    }
+    
 }
