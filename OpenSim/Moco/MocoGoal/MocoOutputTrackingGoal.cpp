@@ -143,6 +143,7 @@ void MocoOutputTrackingGoal::calcIntegrandImpl(
     double ref_val = 0;
     int idouble = 0;
     int ivec3 = 0;
+    integrand = 0;
     for (int i = 0; i < (int)m_outputs.size(); ++i) {
         if (m_data_types[i] == Type_double) {
             model_val = static_cast<const Output<double>*>(m_outputs[i].get())

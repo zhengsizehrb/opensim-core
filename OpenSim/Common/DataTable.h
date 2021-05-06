@@ -1023,6 +1023,24 @@ public:
         return _depData.updCol(static_cast<int>(index));
     }
 
+    /** Set dependent column at index.
+
+    \throws EmptyTable If the table is empty.
+    \throws ColumnIndexOutOfRange If index is out of range for number of columns
+                                  in the table.                               */
+    void setDependentColumnAtIndex(size_t index, const Vector& depCol) {
+        OPENSIM_THROW_IF(isEmpty(), EmptyTable);
+        OPENSIM_THROW_IF(isColumnIndexOutOfRange(index), 
+                         ColumnIndexOutOfRange, index, 0, 
+                         static_cast<size_t>(_depData.ncol() - 1));
+        OPENSIM_THROW_IF(depCol.nrow() != (int)getNumRows(), 
+                         IncorrectNumRows,
+                         static_cast<size_t>(getNumRows()),
+                         static_cast<size_t>(depCol.nrow()));
+
+        _depData.updCol(static_cast<int>(index)) = depCol;
+    }
+
     /** Update dependent Column which has the given column label.
 
     \throws KeyNotFound If columnLabel is not found to be label of any existing
