@@ -30,6 +30,8 @@ void MocoControlGoal::constructProperties() {
     constructProperty_control_weights_pattern(MocoWeightSet());
     constructProperty_exponent(2);
     constructProperty_divide_by_displacement(false);
+    constructProperty_minimize_initial_controls(false);
+    constructProperty_initial_controls_weight(1.0);
 }
 
 void MocoControlGoal::setWeightForControl(
@@ -132,6 +134,17 @@ void MocoControlGoal::calcIntegrandImpl(
 void MocoControlGoal::calcGoalImpl(
         const GoalInput& input, SimTK::Vector& cost) const {
     cost[0] = input.integral;
+    if (get_minimize_initial_controls()) {
+        const auto& controls = input.initial_controls;
+        int iweight = 0;
+        double initial_controls = 0;
+        for (const auto& icontrol : m_controlIndices) {
+            const auto& control = controls[icontrol];
+            initial_controls += m_weights[iweight] * m_power_function(control);
+            ++iweight;
+        }
+        cost[0] += get_initial_controls_weight() * initial_controls;
+    }
     if (get_divide_by_displacement()) {
         cost[0] /=
                 calcSystemDisplacement(input.initial_state, input.final_state);

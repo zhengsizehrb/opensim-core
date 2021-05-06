@@ -93,6 +93,22 @@ public:
         return get_divide_by_displacement();
     }
 
+    // TODO
+    void setMinimizeInitialControls(bool tf) {
+        set_minimize_initial_controls(tf);
+    }
+    bool getMinimizeInitialControls() const {
+        return get_minimize_initial_controls();
+    }
+
+    // TODO
+    void setInitialControlsWeight(double weight) {
+        set_initial_controls_weight(weight);
+    }
+    double getInitialControlsWeight() const {
+        return get_initial_controls_weight();
+    }
+
 protected:
     void initializeOnModelImpl(const Model&) const override;
     void calcIntegrandImpl(
@@ -115,6 +131,11 @@ private:
     OpenSim_DECLARE_PROPERTY(divide_by_displacement, bool,
             "Divide by the model's displacement over the phase (default: "
             "false)");
+    OpenSim_DECLARE_PROPERTY(minimize_initial_controls, bool,
+            "Minimize the controls at the initial state of the trajectory "
+            "(default: false).");
+    OpenSim_DECLARE_PROPERTY(initial_controls_weight, double,
+            "Global weight for minimizing initial controls (default: 1.0).");
     mutable std::vector<double> m_weights;
     mutable std::vector<int> m_controlIndices;
     mutable std::vector<std::string> m_controlNames;

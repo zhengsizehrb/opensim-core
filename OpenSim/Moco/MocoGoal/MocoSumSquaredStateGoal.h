@@ -92,18 +92,28 @@ public:
         return get_divide_by_displacement();
     }
 
+    // TODO
+    void setMinimizeInitialStates(bool tf) {
+        set_minimize_initial_states(tf);
+    }
+    bool getMinimizeInitialStates() const {
+        return get_minimize_initial_states();
+    }
+
+    // TODO
+    void setInitialStatesWeight(double weight) {
+        set_initial_states_weight(weight);
+    }
+    double getInitialStatesWeight() const {
+        return get_initial_states_weight();
+    }
+
 protected:
     void initializeOnModelImpl(const Model&) const override;
     void calcIntegrandImpl(
             const IntegrandInput& input, SimTK::Real& integrand) const override;
     void calcGoalImpl(
-            const GoalInput& input, SimTK::Vector& cost) const override {
-        cost[0] = input.integral;
-        if (get_divide_by_displacement()) {
-            cost[0] /= calcSystemDisplacement(
-                    input.initial_state, input.final_state);
-        }
-    }
+            const GoalInput& input, SimTK::Vector& cost) const override;
     void printDescriptionImpl() const override;
 
 private:
@@ -117,11 +127,18 @@ private:
     OpenSim_DECLARE_PROPERTY(divide_by_displacement, bool,
             "Divide by the model's displacement over the phase (default: "
             "false)");
+    OpenSim_DECLARE_PROPERTY(minimize_initial_states, bool,
+            "Minimize the states at the initial state of the trajectory "
+            "(default: false).");
+    OpenSim_DECLARE_PROPERTY(initial_states_weight, double,
+            "Global weight for minimizing initial states (default: 1.0).");
 
     void constructProperties() {
         constructProperty_state_weights(MocoWeightSet());
         constructProperty_pattern();
         constructProperty_divide_by_displacement(false);
+        constructProperty_minimize_initial_states(false);
+        constructProperty_initial_states_weight(1.0);
     }
 
     /// Return the corresponding weight to a given stateName in the

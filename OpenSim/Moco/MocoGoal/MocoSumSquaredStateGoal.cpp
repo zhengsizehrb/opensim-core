@@ -102,6 +102,23 @@ void MocoSumSquaredStateGoal::calcIntegrandImpl(
     }
 }
 
+void MocoSumSquaredStateGoal::calcGoalImpl(
+        const GoalInput& input, SimTK::Vector& cost) const {
+    cost[0] = input.integral;
+    if (get_minimize_initial_states()) {
+        double initial_states = 0;
+        for (int i = 0; i < (int)m_state_weights.size(); ++i) {
+            const auto& value = input.initial_state.getY()[m_sysYIndices[i]];
+            initial_states += m_state_weights[i] * value * value;
+        }
+        cost[0] += get_initial_states_weight() * initial_states;
+    }
+    if (get_divide_by_displacement()) {
+        cost[0] /=
+            calcSystemDisplacement(input.initial_state, input.final_state);
+    }
+}
+
 void MocoSumSquaredStateGoal::printDescriptionImpl() const {
     for (int i = 0; i < (int)m_state_names.size(); i++) {
         log_cout("        state: {}, weight: {}", m_state_names[i],
