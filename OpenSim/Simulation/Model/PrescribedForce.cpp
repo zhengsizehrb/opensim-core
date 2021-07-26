@@ -436,7 +436,7 @@ void PrescribedForce::generateDecorations(bool fixed,
         const Model& model = getModel();
         const double mass = model.getTotalMass(state);
         const double weight = mass * model.getGravity().norm();
-        const double forceVizScaleFactor = 1 / weight;
+        const double forceVizScaleFactor = 1.5 / weight;
 
         const PhysicalFrame& frame =
                 getSocket<PhysicalFrame>("frame").getConnectee();
@@ -446,8 +446,8 @@ void PrescribedForce::generateDecorations(bool fixed,
         SimTK::Vec3 point = getApplicationPoint(state);
         if (!get_forceIsGlobal())
             force = frame.expressVectorInAnotherFrame(state, force, ground);
-        if (get_pointIsGlobal())
-            point = ground.findStationLocationInAnotherFrame(state, point, frame);
+        if (!get_pointIsGlobal())
+            point = frame.findStationLocationInGround(state, point);
 
         // Scale the contact force vector and compute the cylinder length.
         const auto& scaledForce = forceVizScaleFactor * force;
@@ -456,13 +456,15 @@ void PrescribedForce::generateDecorations(bool fixed,
         //const SimTK::Transform forceVizTransform;
         const SimTK::Transform forceVizTransform(
                 SimTK::Rotation(SimTK::UnitVec3(scaledForce), SimTK::YAxis),
-                point + scaledForce / 2.0);
+                point + scaledForce);
 
         // Construct the force decoration and add it to the list of geometries.
         //SimTK::DecorativeArrow forceViz(SimTK::Vec3(0), SimTK::Vec3(1), length);
-        SimTK::DecorativeCylinder forceViz(0.05, 0.5 * length);
+        SimTK::DecorativeCylinder forceViz(0.01, length);
         forceViz.setTransform(forceVizTransform);
-        forceViz.setColor(SimTK::Vec3(0.0, 0.6, 0.0));
+        forceViz.setColor(SimTK::Vec3(0.0, 0.9, 0.0));
+        forceViz.setResolution(2.0);
+        forceViz.setOpacity(1.0);
         geometry.push_back(forceViz);
     }
 }

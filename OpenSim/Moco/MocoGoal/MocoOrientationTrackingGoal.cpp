@@ -83,7 +83,7 @@ void MocoOrientationTrackingGoal::initializeOnModelImpl(const Model& model)
 
         // Create the StatesTrajectory.
         auto statesTraj = StatesTrajectory::createFromStatesTable(
-                model, statesTableToUse);
+                model, statesTableToUse, true);
 
         // Use all paths provided in frame_paths.
         OPENSIM_THROW_IF_FRMOBJ(getProperty_frame_paths().empty(), Exception,

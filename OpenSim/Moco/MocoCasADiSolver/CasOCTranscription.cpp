@@ -227,9 +227,18 @@ void Transcription::createVariablesAndSetBounds(const casadi::DM& grid,
         }
         if (m_problem.getNumAuxiliaryResidualEquations()) {
             setVariableBounds(derivatives,
-                Slice(m_problem.getNumAccelerations(),
-                      m_problem.getNumDerivatives()),
-                Slice(), m_solver.getImplicitAuxiliaryDerivativeBounds());
+                    Slice(m_problem.getNumAccelerations(),
+                            m_problem.getNumDerivatives()),
+                    Slice(1, m_numGridPoints - 1),
+                    m_solver.getImplicitAuxiliaryDerivativeBounds());
+            setVariableBounds(derivatives,
+                    Slice(m_problem.getNumAccelerations(),
+                            m_problem.getNumDerivatives()),
+                    0, m_solver.getImplicitAuxiliaryDerivativeInitialBounds());
+            setVariableBounds(derivatives,
+                    Slice(m_problem.getNumAccelerations(),
+                            m_problem.getNumDerivatives()),
+                    -1, m_solver.getImplicitAuxiliaryDerivativeFinalBounds());
         }
     }
     {

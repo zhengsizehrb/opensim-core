@@ -166,6 +166,14 @@ public:
             "The weight on the cost term added if "
             "'minimize_implicit_auxiliary_derivatives' is enabled."
             "Default: 1.0.");
+    OpenSim_DECLARE_PROPERTY(implicit_auxiliary_derivative_initial_bounds, 
+            MocoBounds,
+            "Bounds on initial derivative variables for components with "
+            "auxiliary dynamics in implicit form. Default: [-1000, 1000]");
+    OpenSim_DECLARE_PROPERTY(implicit_auxiliary_derivative_final_bounds,
+            MocoBounds,
+            "Bounds on final derivative variables for components with "
+            "auxiliary dynamics in implicit form. Default: [-1000, 1000]");
 
     MocoCasADiSolver();
 

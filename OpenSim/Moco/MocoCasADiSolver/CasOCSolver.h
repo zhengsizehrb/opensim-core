@@ -86,6 +86,18 @@ public:
     Bounds getImplicitAuxiliaryDerivativeBounds() const {
         return m_implicitAuxiliaryDerivativeBounds;
     }
+    void setImplicitAuxiliaryDerivativeInitialBounds(Bounds bounds) {
+        m_implicitAuxiliaryDerivativeInitialBounds = bounds;
+    }
+    Bounds getImplicitAuxiliaryDerivativeInitialBounds() const {
+        return m_implicitAuxiliaryDerivativeInitialBounds;
+    }
+    void setImplicitAuxiliaryDerivativeFinalBounds(Bounds bounds) {
+        m_implicitAuxiliaryDerivativeFinalBounds = bounds;
+    }
+    Bounds getImplicitAuxiliaryDerivativeFinalBounds() const {
+        return m_implicitAuxiliaryDerivativeFinalBounds;
+    }
     bool getMinimizeImplicitAuxiliaryDerivatives() const {
         return m_minimizeImplicitAuxiliaryDerivatives;
     }
@@ -186,6 +198,8 @@ private:
     bool m_interpolateControlMidpoints = true;
     Bounds m_implicitMultibodyAccelerationBounds;
     Bounds m_implicitAuxiliaryDerivativeBounds;
+    Bounds m_implicitAuxiliaryDerivativeInitialBounds;
+    Bounds m_implicitAuxiliaryDerivativeFinalBounds;
     std::string m_finite_difference_scheme = "central";
     std::string m_sparsity_detection = "none";
     std::string m_write_sparsity;

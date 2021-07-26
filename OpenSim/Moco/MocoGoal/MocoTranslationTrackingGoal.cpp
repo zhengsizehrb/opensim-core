@@ -84,7 +84,7 @@ void MocoTranslationTrackingGoal::initializeOnModelImpl(const Model& model)
 
         // Create the StatesTrajectory.
         auto statesTraj = StatesTrajectory::createFromStatesTable(
-                model, statesTableToUse);
+                model, statesTableToUse, true);
 
         // Use all paths provided in frame_paths.
         OPENSIM_THROW_IF_FRMOBJ(getProperty_frame_paths().empty(), Exception,
@@ -152,7 +152,19 @@ void MocoTranslationTrackingGoal::calcIntegrandImpl(
             position_ref[ip] =
                     m_ref_splines[3*iframe + ip].calcValue(timeVec);
         }
-        Vec3 error = position_model - position_ref;
+        Vec3 error3D = position_model - position_ref;
+
+        // Project the error.
+        SimTK::Vec3 error;
+        if (m_projectionType == ProjectionType::None) {
+            error = error3D;
+        } else if (m_projectionType == ProjectionType::Vector) {
+            error = SimTK::dot(error3D, m_projectionVector) *
+                    m_projectionVector;
+        } else {
+            error = error3D - SimTK::dot(error3D, m_projectionVector) *
+                                      m_projectionVector;
+        }
 
         // Add this frame's position error to the integrand.
         const double& weight = m_translation_weights[iframe];

@@ -98,7 +98,7 @@ void MocoOutputTrackingGoal::initializeOnModelImpl(
 
     // Create the StatesTrajectory.
     auto statesTraj =
-            StatesTrajectory::createFromStatesTable(model, statesTable);
+            StatesTrajectory::createFromStatesTable(model, statesTable, true);
 
     TimeSeriesTable doubleTable;
     TimeSeriesTableVec3 vec3Table;
@@ -126,6 +126,8 @@ void MocoOutputTrackingGoal::initializeOnModelImpl(
     }
     doubleTable.setColumnLabels(doublePaths);
     vec3Table.setColumnLabels(vec3Paths);
+
+    STOFileAdapter().write(vec3Table.flatten(), "com_tracking_test.sto");
 
     m_refs_double = GCVSplineSet(doubleTable);
     m_refs_Vec3 = GCVSplineSet(vec3Table.flatten());

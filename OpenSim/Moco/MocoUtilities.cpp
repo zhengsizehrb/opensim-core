@@ -248,12 +248,16 @@ MocoTrajectory OpenSim::createPeriodicTrajectory(
     SimTK::Matrix controls = process(
             "control", in.getControlNames(), in.getControlsTrajectory());
 
+    SimTK::Matrix multipliers = process("multiplier", in.getMultiplierNames(),
+            in.getMultipliersTrajectory());
+
     SimTK::Matrix derivatives = process("derivative", in.getDerivativeNames(),
             in.getDerivativesTrajectory());
 
     return MocoTrajectory(newTime,
             {{"states", {in.getStateNames(), states}},
                     {"controls", {in.getControlNames(), controls}},
+                    {"multipliers", {in.getMultiplierNames(), multipliers}},
                     {"derivatives", {in.getDerivativeNames(), derivatives}}});
 }
 

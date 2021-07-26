@@ -133,6 +133,24 @@ public:
         return get_translation_reference_file();
     }
 
+    /// Set if the force error should be projected onto either a vector or
+    /// plane. Possible values: "none" (default), "vector", and "plane".
+    void setProjection(std::string projection) {
+        set_projection(std::move(projection));
+    }
+    std::string getProjection() const { return get_projection(); }
+
+    /// Set the vector to use for projecting the force error.
+    /// If the projection type is "vector", the force error is projected onto
+    /// the vector provided here. If the projection type is "plane", the force
+    /// error is projected onto the plane perpendicular to this vector.
+    void setProjectionVector(SimTK::Vec3 normal) {
+        set_projection_vector(std::move(normal));
+    }
+    /// Unset the projection vector.
+    void clearProjectionVector() { updProperty_projection_vector().clear(); }
+    SimTK::Vec3 getProjectionVector() const { return get_projection_vector(); }
+
 protected:
     void initializeOnModelImpl(const Model& model) const override;
     void calcIntegrandImpl(
@@ -159,12 +177,23 @@ private:
     OpenSim_DECLARE_PROPERTY(translation_weights, MocoWeightSet,
             "Set of weight objects to weight the tracking of "
             "individual frames' translations in the cost.");
+    OpenSim_DECLARE_PROPERTY(projection, std::string,
+            "'none' (default): use full 3-D position error; "
+            "'vector': project position error onto projection_vector; "
+            "'plane': project position error onto the plane perpendicular "
+            "to projection_vector.");
+    OpenSim_DECLARE_OPTIONAL_PROPERTY(projection_vector, SimTK::Vec3,
+            "(optional) If provided, the position error is projected onto the "
+            "plane perpendicular to this vector. The vector is expressed in "
+            "ground. The vector can have any length.");
 
     void constructProperties() {
         constructProperty_states_reference(TableProcessor());
         constructProperty_translation_reference_file("");
         constructProperty_frame_paths();
         constructProperty_translation_weights(MocoWeightSet());
+        constructProperty_projection("none");
+        constructProperty_projection_vector();
     }
 
     TimeSeriesTableVec3 m_translation_table;
@@ -172,6 +201,14 @@ private:
     mutable std::vector<std::string> m_frame_paths;
     mutable std::vector<SimTK::ReferencePtr<const Frame>> m_model_frames;
     mutable std::vector<double> m_translation_weights;
+
+    enum class ProjectionType {
+        None,
+        Vector,
+        Plane
+    };
+    mutable ProjectionType m_projectionType = ProjectionType::None;
+    mutable SimTK::UnitVec3 m_projectionVector;
 };
 
 } // namespace OpenSim

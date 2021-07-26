@@ -51,6 +51,10 @@ void MocoCasADiSolver::constructProperties() {
     constructProperty_implicit_multibody_accelerations_weight(1.0);
     constructProperty_minimize_implicit_auxiliary_derivatives(false);
     constructProperty_implicit_auxiliary_derivatives_weight(1.0);
+    constructProperty_implicit_auxiliary_derivative_initial_bounds(
+            MocoBounds(-1000.0, 1000.0));
+    constructProperty_implicit_auxiliary_derivative_final_bounds(
+            MocoBounds(-1000.0, 1000.0));
 }
 
 bool MocoCasADiSolver::isAvailable() {
@@ -311,6 +315,10 @@ std::unique_ptr<CasOC::Solver> MocoCasADiSolver::createCasOCSolver(
 
     casSolver->setImplicitAuxiliaryDerivativeBounds(
             convertBounds(get_implicit_auxiliary_derivative_bounds()));
+    casSolver->setImplicitAuxiliaryDerivativeInitialBounds(
+            convertBounds(get_implicit_auxiliary_derivative_initial_bounds()));
+    casSolver->setImplicitAuxiliaryDerivativeFinalBounds(
+            convertBounds(get_implicit_auxiliary_derivative_final_bounds()));
     casSolver->setMinimizeImplicitAuxiliaryDerivatives(
             get_minimize_implicit_auxiliary_derivatives());
     OPENSIM_THROW_IF(get_implicit_auxiliary_derivatives_weight() < 0, Exception,
@@ -364,13 +372,12 @@ MocoSolution MocoCasADiSolver::solveImpl() const {
     Logger::Level origLoggerLevel = Logger::getLevel();
     Logger::setLevel(Logger::Level::Warn);
     CasOC::Solution casSolution;
-    try {
-        casSolution = casSolver->solve(casGuess);
-    } catch (...) {
-        OpenSim::Logger::setLevel(origLoggerLevel);
-    }
+    //try {
+    casSolution = casSolver->solve(casGuess);
+    //} catch (...) {
+    //    OpenSim::Logger::setLevel(origLoggerLevel);
+    //}
     OpenSim::Logger::setLevel(origLoggerLevel);
-
 
     MocoSolution mocoSolution =
             convertToMocoTrajectory<MocoSolution>(casSolution);

@@ -4,10 +4,12 @@
 %include "std_string.i"
 
 %include "std_vector.i"
+%include "std_pair.i"
 %template(StdVectorUnsigned) std::vector<unsigned>;
 %template(StdVectorInt)      std::vector<int>;
 %template(StdVectorDouble)   std::vector<double>;
 %template(StdVectorString)   std::vector<std::string>;
+%template(StdVectorPairString)   std::vector<std::pair<std::string, std::string>>;
 
 %include "std_map.i"
 %include <std_shared_ptr.i>
