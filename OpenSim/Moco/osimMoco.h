@@ -20,7 +20,6 @@
 
 #include "About.h"
 #include "Components/DiscreteForces.h"
-#include "Components/PositionMotion.h"
 #include "Components/StationPlaneContactForce.h"
 #include "MocoBounds.h"
 #include "MocoCasADiSolver/MocoCasADiSolver.h"
@@ -47,6 +46,8 @@
 #include "MocoGoal/MocoTranslationTrackingGoal.h"
 #include "MocoGoal/MocoOutputTrackingGoal.h"
 #include "MocoGoal/MocoBaseOfSupportGoal.h"
+#include "MocoGoal/MocoStepTimeAsymmetryGoal.h"
+#include "MocoGoal/MocoStepLengthAsymmetryGoal.h"
 #include "MocoInverse.h"
 #include "MocoParameter.h"
 #include "MocoProblem.h"
